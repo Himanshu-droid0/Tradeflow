@@ -4,11 +4,13 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const bcrypt = require("bcryptjs");
 
 const { HoldingsModel } = require("./model/HoldingsModel");
 
 const { PositionsModel } = require("./model/PositionsModel");
 const { OrdersModel } = require("./model/OrdersModel");
+const { userModel } = require("./model/userModel.js");
 
 const PORT = process.env.PORT || 3002;
 const uri = process.env.MONGO_URL;
@@ -210,8 +212,76 @@ app.post("/newOrder", async (req, res) => {
   res.send("Order saved!");
 });
 
-app.listen(PORT, () => {
-  console.log("App started!");
-  mongoose.connect(uri);
-  console.log("DB started!");
+app.post("/api/auth/signup", async (req, res) => {
+  try{
+    const { name, email, password } = req.body;
+
+    if(!name?.trim() || !email?.trim() || !password){
+      return res.status(400).json({
+        message: "Name, email, and password are reuired.",
+      });
+    }
+
+    if(password.length < 8){
+      return res.status(400).json({
+        message: "password must be at least 8 characters.",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const existingUser = await userModel.findOne({
+      email: normalizedEmail,
+    })
+
+    if (existingUser) {
+      return res.status(409).json({
+        message: "An account with this email already exists.",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const user = await userModel.create({
+      name: name.trim(),
+      email: normalizedEmail,
+      password: hashedPassword,
+    });
+
+    return res.status(201).json({
+      message: "Account created successfully!",
+      user:{
+        id: user._id,
+        name: user._name,
+        email: user._email,
+      },
+    });
+  }catch(error){
+    if(error.code === 11000){
+      return res.status(409).json({
+        message: "An account with this email already exists.",
+      });
+    }
+    console.error("Signup error:", error);
+
+    return res.status(500).json({
+      message: "Unable to create your account. Please try again.",
+    });
+  }
 });
+
+async function startServer() {
+  try {
+    await mongoose.connect(uri);
+    console.log("MongoDB connected successfully");
+
+    app.listen(PORT, () => {
+      console.log(`Backend running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start backend:", error.message);
+    process.exit(1);
+  }
+}
+
+startServer();

@@ -1,16 +1,27 @@
-import React from 'react';
+import React from "react";
+import { useNavigate} from "react-router-dom";
 
 function Hero() {
-    return (
-        <div className='container p-5 mb-5'>
-            <div className='row text-center'>
-                <img src='media/image/homeHero.png' alt='Hero image' className='mb-5'/>
-                <h1 className='mt-5'>Invest in everything</h1>
-                <p>Online plateform to invest in stockes, derivatives, mutual funds, and more</p>
-                <button className='p-2 btn btn-primary fs-5 mb-5' style={{width:"20%", margin:"0 auto"}}>Signup Now</button>
-            </div>
-        </div>
-    );
+    const navigate = useNavigate();
+  return (
+    <div className="container p-5 mb-5">
+      <div className="row text-center">
+        <img src="media/image/homeHero.png" alt="Hero image" className="mb-5" />
+        <h1 className="mt-5">Invest in everything</h1>
+        <p>
+          Online plateform to invest in stockes, derivatives, mutual funds, and
+          more
+        </p>
+        <button
+          className="p-2 btn btn-primary fs-5 mb-5"
+          style={{ width: "20%", margin: "0 auto" }}
+          onClick={() => navigate("/signup")}
+        >
+          Signup Now
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default Hero;
